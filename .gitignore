@@ -1,0 +1,59 @@
+# ==========================================
+# Artefatos de Build do .NET / F#
+# ==========================================
+[Bb]in/
+[Oo]bj/
+*.fsproj.user
+*.suo
+*.user
+
+# ==========================================
+# Caches de IDE (VS Code / Ionide)
+# ==========================================
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+.ionide/
+.fsac/
+
+# ==========================================
+# Arquivos do Sistema Operacional
+# ==========================================
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+.DS_Store
+
+# ==========================================
+# Resultados de Testes e Profiling
+# ==========================================
+[Tt]est[Rr]esults/
+[Cc]overage/
+*.coverage
+*.coveragexml
+BenchmarkDotNet.Artifacts/
+
+# ==========================================
+# Dados Financeiros, Benchmarks e Logs
+# ==========================================
+# Ignora arquivos CSV de cotações do Dow Jones (ex: dow30_returns.csv)
+*.csv
+*.tsv
+data/
+
+# Logs de execução do Monte Carlo e saídas do script run_benchmark.sh
+*.log
+benchmark_results/
+
+# ==========================================
+# Segredos e Configurações Locais
+# ==========================================
+appsettings.Development.json
+appsettings.local.json
+.env

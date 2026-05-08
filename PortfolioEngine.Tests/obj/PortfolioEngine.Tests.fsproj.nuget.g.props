@@ -23,8 +23,8 @@
     <Pkgxunit_runner_visualstudio Condition=" '$(Pkgxunit_runner_visualstudio)' == '' ">/home/brunochapa/.nuget/packages/xunit.runner.visualstudio/2.4.5</Pkgxunit_runner_visualstudio>
     <Pkgxunit_analyzers Condition=" '$(Pkgxunit_analyzers)' == '' ">/home/brunochapa/.nuget/packages/xunit.analyzers/1.0.0</Pkgxunit_analyzers>
     <Pkgxunit Condition=" '$(Pkgxunit)' == '' ">/home/brunochapa/.nuget/packages/xunit/2.4.2</Pkgxunit>
-    <PkgMicrosoft_NET_Test_Sdk Condition=" '$(PkgMicrosoft_NET_Test_Sdk)' == '' ">/home/brunochapa/.nuget/packages/microsoft.net.test.sdk/17.6.0</PkgMicrosoft_NET_Test_Sdk>
     <PkgFSharp_Core Condition=" '$(PkgFSharp_Core)' == '' ">/home/brunochapa/.nuget/packages/fsharp.core/8.0.102</PkgFSharp_Core>
+    <PkgMicrosoft_NET_Test_Sdk Condition=" '$(PkgMicrosoft_NET_Test_Sdk)' == '' ">/home/brunochapa/.nuget/packages/microsoft.net.test.sdk/17.6.0</PkgMicrosoft_NET_Test_Sdk>
     <Pkgcoverlet_collector Condition=" '$(Pkgcoverlet_collector)' == '' ">/home/brunochapa/.nuget/packages/coverlet.collector/6.0.0</Pkgcoverlet_collector>
   </PropertyGroup>
 </Project>

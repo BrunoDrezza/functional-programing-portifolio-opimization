@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "CQYkZYd0R1raBS401xubD66huQkSMtNqbSq/YPLS4FMZR8C1gbaDm0t81H0DbSqCpdoqHS3r9sUFUebccO6/SA==",
+  "dgSpecHash": "cpi2dZa84Wqu7VGOAr9cWkzCzmDIpBYy/p6jU5FXFUCfhROcqeb6lAivtvxO0iboZVsQNvaxAHkaWHTBwom98w==",
   "success": true,
   "projectFilePath": "/home/brunochapa/Programacao-Funcional/functional-programing-portifolio-opimization/PortfolioEngine.Tests/PortfolioEngine.Tests.fsproj",
   "expectedPackageFiles": [

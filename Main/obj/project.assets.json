@@ -55,6 +55,19 @@
             "locale": "zh-Hant"
           }
         }
+      },
+      "PortfolioEngine/1.0.0": {
+        "type": "project",
+        "framework": ".NETCoreApp,Version=v8.0",
+        "dependencies": {
+          "FSharp.Core": "8.0.102"
+        },
+        "compile": {
+          "bin/placeholder/PortfolioEngine.dll": {}
+        },
+        "runtime": {
+          "bin/placeholder/PortfolioEngine.dll": {}
+        }
       }
     }
   },
@@ -99,11 +112,17 @@
         "lib/netstandard2.1/zh-Hans/FSharp.Core.resources.dll",
         "lib/netstandard2.1/zh-Hant/FSharp.Core.resources.dll"
       ]
+    },
+    "PortfolioEngine/1.0.0": {
+      "type": "project",
+      "path": "../PortfolioEngine/PortfolioEngine.fsproj",
+      "msbuildProject": "../PortfolioEngine/PortfolioEngine.fsproj"
     }
   },
   "projectFileDependencyGroups": {
     "net8.0": [
-      "FSharp.Core >= 8.0.102"
+      "FSharp.Core >= 8.0.102",
+      "PortfolioEngine >= 1.0.0"
     ]
   },
   "packageFolders": {
@@ -131,7 +150,11 @@
       "frameworks": {
         "net8.0": {
           "targetAlias": "net8.0",
-          "projectReferences": {}
+          "projectReferences": {
+            "/home/brunochapa/Programacao-Funcional/functional-programing-portifolio-opimization/PortfolioEngine/PortfolioEngine.fsproj": {
+              "projectPath": "/home/brunochapa/Programacao-Funcional/functional-programing-portifolio-opimization/PortfolioEngine/PortfolioEngine.fsproj"
+            }
+          }
         }
       }
     },

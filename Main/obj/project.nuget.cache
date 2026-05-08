@@ -1,0 +1,10 @@
+{
+  "version": 2,
+  "dgSpecHash": "kwSMy3zrYWshNpKLiZn1JNnCUq1WEvT7on6YBid+0QuTHOxzkbb6653jh6zg2ou3FCByS3qleZ9NujvHoppojg==",
+  "success": true,
+  "projectFilePath": "/home/brunochapa/Programacao-Funcional/functional-programing-portifolio-opimization/Main/Main.fsproj",
+  "expectedPackageFiles": [
+    "/home/brunochapa/.nuget/packages/fsharp.core/8.0.102/fsharp.core.8.0.102.nupkg.sha512"
+  ],
+  "logs": []
+}

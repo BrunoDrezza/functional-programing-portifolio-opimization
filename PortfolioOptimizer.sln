@@ -9,6 +9,8 @@ Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "PortfolioEngine", "Portfoli
 EndProject
 Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "PortfolioEngine.Tests", "PortfolioEngine.Tests\PortfolioEngine.Tests.fsproj", "{A7666C34-F6BE-4E2E-85B6-A722E275E868}"
 EndProject
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "ETL", "ETL\ETL.fsproj", "{4DACF1E4-FE5F-41ED-8155-878660C97742}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -30,5 +32,9 @@ Global
 		{A7666C34-F6BE-4E2E-85B6-A722E275E868}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A7666C34-F6BE-4E2E-85B6-A722E275E868}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A7666C34-F6BE-4E2E-85B6-A722E275E868}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4DACF1E4-FE5F-41ED-8155-878660C97742}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4DACF1E4-FE5F-41ED-8155-878660C97742}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4DACF1E4-FE5F-41ED-8155-878660C97742}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4DACF1E4-FE5F-41ED-8155-878660C97742}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

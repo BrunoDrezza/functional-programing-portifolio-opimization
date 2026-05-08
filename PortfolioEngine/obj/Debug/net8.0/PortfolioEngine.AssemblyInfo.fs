@@ -10,7 +10,7 @@ open System.Reflection
 [<assembly: System.Reflection.AssemblyCompanyAttribute("PortfolioEngine")>]
 [<assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")>]
 [<assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")>]
-[<assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+03d8905479bb739718d4398470c059d8ea0e9307")>]
+[<assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+a2e3b425b2e02ca25318787438d2a16d9aa6092a")>]
 [<assembly: System.Reflection.AssemblyProductAttribute("PortfolioEngine")>]
 [<assembly: System.Reflection.AssemblyTitleAttribute("PortfolioEngine")>]
 [<assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")>]

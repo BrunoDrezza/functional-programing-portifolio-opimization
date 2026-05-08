@@ -1,104 +1,185 @@
-# Otimizador de Portfólio Dow Jones (Monte Carlo)
+# Otimizador de Portfólio Dow Jones (Monte Carlo & Parallel F#)
 
-Este projeto consiste em um motor de otimização de carteiras de alto desempenho, desenvolvido em **F#**, para identificar a alocação de ativos que maximiza o **Sharpe Ratio**. O sistema utiliza simulações de Monte Carlo massivamente paralelas para explorar o espaço combinatório dos ativos do índice Dow Jones (DJIA).
+Este repositório contém um motor de otimização de ativos de alta performance desenvolvido em **F#**. O sistema utiliza simulações de Monte Carlo massivamente paralelas para explorar o espaço combinatório das ações do Dow Jones (DJIA), identificando a alocação que maximiza o **Sharpe Ratio** sob restrições estritas de concentração.
 
 O projeto foi desenvolvido como requisito final para a disciplina de **Programação Funcional** no **Insper (2026-1)**.
 
-## 1. Contexto e Objetivos
+## 1. Fluxo de Execução (Arquitetura)
 
-O desafio proposto por um gestor de portfólio consiste em selecionar a melhor combinação de **25 ou mais ativos** entre os 30 disponíveis no Dow Jones. Para cada combinação, o sistema deve realizar **1.000.000 de simulações** de pesos aleatórios para encontrar a Fronteira Eficiente.
+O sistema segue um modelo de pipeline funcional, partindo da extração de dados brutos até a geração da Fronteira Eficiente.
 
-### Regras e Restrições:
+```mermaid
+graph TD
+    subgraph "Camada de Dados (Impura)"
+        A[Yahoo Finance API v8] -->|JSON| B[ETL: Fetcher & Parser]
+        B -->|F# Records| C[ETL: Consolidator]
+        C -->|all_returns.csv| D[Main: DataLoader]
+    end
 
-* **Universo**: 30 ações do Dow Jones Industrial Average.
-* **Janela de Dados**: Segundo semestre de 2025 (01/07/2025 a 31/12/2025).
-* **Estratégia**: *Long-only* ($w_i \ge 0$) com soma dos pesos igual a 1.
-* **Concentração**: Máximo de 20% por ativo ($w_i \le 0.2$).
-* **Métrica Alvo**: Sharpe Ratio (anualizado).
+    subgraph "Motor de Cálculo (Puro)"
+        D --> E[Main: Combinatória de Ativos]
+        E -->|Array.Parallel.map| F[PortfolioEngine: MathEngine]
+        F --> G[PortfolioEngine: Simulator]
+    end
 
-## 2. Arquitetura do Projeto
+    subgraph "Resultados"
+        G --> H[Carteira Ótima / Max Sharpe]
+        G --> I[CSV: Efficient Frontier Plot]
+    end
 
-Baseado em princípios de **Clean Architecture** e **Programação Funcional**, o projeto é dividido em uma solução .NET com três componentes principais, isolando a lógica pura dos efeitos colaterais.
-
-### Estrutura da Solution:
-
-* **`PortfolioEngine` (Library)**: Contém o "núcleo duro" matemático. É uma biblioteca puramente funcional, sem I/O ou estado compartilhado.
-* `Domain.fs`: Definições de tipos imutáveis e modelos de dados.
-* `MathEngine.fs`: Funções puras para cálculo de retorno, matriz de covariância e volatilidade.
-* `Simulator.fs`: Motor de simulação de Monte Carlo e lógica de geração de pesos.
-
-
-* **`Main` (Console App)**: O orquestrador do sistema. Lida com funções impuras.
-* `DataLoader.fs`: Módulo responsável pelo consumo da API (Yahoo Finance) e parsing de CSVs.
-* `Program.fs`: Ponto de entrada, gerenciamento de paralelismo e exibição de resultados.
-
-
-* **`PortfolioEngine.Tests` (xUnit)**: Suite de testes unitários para validar a precisão dos cálculos matemáticos.
-
-## 3. Fundamentação Matemática
-
-A otimização busca maximizar a função objetivo:
-
-
-$$SR = \frac{\mu - r_{free}}{\sigma}$$
-
-Onde:
-
-* **Retorno ($\mu$)**: Multiplicação matricial dos pesos pelos retornos médios históricos, anualizada por 252 dias.
-* **Volatilidade ($\sigma$)**: Cálculo via forma quadrática $\sigma_p = \sqrt{w^T \cdot C \cdot w}$, onde $C$ é a matriz de covariância, anualizada por $\sqrt{252}$.
-
-## 4. Tecnologias Utilizadas
-
-* **Linguagem**: F# (Paradigma Funcional).
-* **Runtime**: .NET 8 / .NET 9.
-* **Ambiente**: Desenvolvido e otimizado para **Linux (WSL2)**.
-* **Paralelismo**: Uso de `Array.Parallel` e workflows assíncronos para distribuição de carga em múltiplos núcleos de CPU.
-* **Bibliotecas**: `FSharp.Data` (para manipulação de JSON/CSV) e `MathNet.Numerics` (álgebra linear otimizada).
-
-## 5. Como Instalar e Rodar
-
-### Pré-requisitos:
-
-* [.NET SDK](https://dotnet.microsoft.com/download) instalado.
-* Terminal Bash (Linux ou WSL).
-
-### Instalação:
-
-```bash
-# Clone o repositório
-git clone https://github.com/seu-usuario/portfolio-optimizer-fsharp.git
-cd portfolio-optimizer-fsharp
-
-# Restaure as dependências
-dotnet restore
+    style F fill:#f9f,stroke:#333,stroke-width:2px
+    style G fill:#f9f,stroke:#333,stroke-width:2px
 
 ```
 
-### Execução:
+## 2. Estrutura da Solution
 
-Para rodar o otimizador principal:
+A arquitetura foi desenhada seguindo princípios de **Domain-Driven Design (DDD)** e **Clean Architecture**, isolando os efeitos colaterais da lógica de negócio.
+
+* **`ETL` (Library)**: Responsável pela ingestão. Utiliza o módulo `Fetcher` para chamadas assíncronas ao Yahoo Finance (v8 chart API) e o `Parser` para transformar o JSON em tipos nativos, consolidando tudo em uma matriz única no `Transform`.
+* **`PortfolioEngine` (Library - Pura)**:
+* `Domain.fs`: Definições de tipos imutáveis (`Weights`, `CovarianceMatrix`).
+* `MathEngine.fs`: Álgebra linear otimizada para cálculo de $\sigma$ e $\mu$.
+* `Simulator.fs`: Implementação do Monte Carlo com lógica **híbrida (Water-filling)** para garantir pesos $\le 20\%$.
+
+
+* **`Main` (Console App)**: Orquestrador que gerencia o paralelismo de CPU para processar as ~174.000 combinações de ativos possíveis.
+
+## 3. Diferenciais Técnicos
+
+* **Paralelismo Massivo**: Uso de `Array.Parallel.map` para distribuir o processamento por todos os núcleos da CPU, permitindo simular milhões de carteiras em segundos.
+* **Imunidade Cultural**: Parsing numérico via `CultureInfo.InvariantCulture`, garantindo que o sistema funcione perfeitamente em ambientes Linux/WSL independentemente da localização.
+* **Robustez de Dados**: Implementação de *Forward Fill* no carregamento de dados para tratar eventuais lacunas de feriados ou falhas na API.
+* **Estratégia de Pesos Híbrida**: Combinação de sorteio aleatório com algoritmo de redistribuição recursiva para satisfazer a restrição de $w_i \le 0.2$ sem desperdiçar iterações.
+
+## 4. Fundamentação Matemática
+
+A otimização busca a carteira que maximiza:
+
+
+$$SR = \frac{E[R_p] - r_f}{\sigma_p}$$
+
+Onde a volatilidade da carteira ($\sigma_p$) é calculada via forma quadrática:
+
+
+$$\sigma_p = \sqrt{w^T \Sigma w} \times \sqrt{252}$$
+
+## 5. Como Executar
+
+### Pré-requisitos
+
+* .NET 8.0 SDK ou superior.
+* Ambiente Linux/WSL recomendado.
+
+### Rodar o Pipeline Completo
 
 ```bash
+# 1. Compilar o projeto
+dotnet build
+
+# 2. Executar o motor (Extração + Simulação)
 dotnet run --project Main
 
 ```
 
-Para rodar os benchmarks de performance (paralelo vs serial):
+Os resultados serão exibidos no console e o arquivo `data/efficient_frontier.csv` será gerado para plotagem.
 
-```bash
-./scripts/run_benchmark.sh
+## 6. Autoria
 
-```
-
-## 6. Testes Unitários
-
-Para garantir a integridade dos cálculos de risco e retorno, execute a suite de testes:
-
-```bash
-dotnet test
+Projeto desenvolvido por Bruno Drezza como parte da graduação em Economia no Insper.
 
 ```
 
-## 7. Desenvolvimento e Autoria
+Para sua conveniência, gerei o arquivo oficial para você baixar e colocar no seu repositório:
 
-Este projeto foi desenvolvido de forma estritamente individual. O histórico de commits reflete o processo iterativo de construção da arquitetura funcional, migração de dados e otimização de performance.
+
+```python?code_reference&code_event_index=3
+readme_content = """# Otimizador de Portfólio Dow Jones (Monte Carlo & Parallel F#)
+
+Este repositório contém um motor de otimização de ativos de alta performance desenvolvido em **F#**. O sistema utiliza simulações de Monte Carlo massivamente paralelas para explorar o espaço combinatório das ações do Dow Jones (DJIA), identificando a alocação que maximiza o **Sharpe Ratio** sob restrições estritas de concentração.
+
+O projeto foi desenvolvido como requisito final para a disciplina de **Programação Funcional** no **Insper (2026-1)**.
+
+## 1. Fluxo de Execução (Arquitetura)
+
+O sistema segue um modelo de pipeline funcional, partindo da extração de dados brutos até a geração da Fronteira Eficiente.
+
+```mermaid
+graph TD
+    subgraph "Camada de Dados (Impura)"
+        A[Yahoo Finance API v8] -->|JSON| B[ETL: Fetcher & Parser]
+        B -->|F# Records| C[ETL: Consolidator]
+        C -->|all_returns.csv| D[Main: DataLoader]
+    end
+
+    subgraph "Motor de Cálculo (Puro)"
+        D --> E[Main: Combinatória de Ativos]
+        E -->|Array.Parallel.map| F[PortfolioEngine: MathEngine]
+        F --> G[PortfolioEngine: Simulator]
+    end
+
+    subgraph "Resultados"
+        G --> H[Carteira Ótima / Max Sharpe]
+        G --> I[CSV: Efficient Frontier Plot]
+    end
+
+    style F fill:#f9f,stroke:#333,stroke-width:2px
+    style G fill:#f9f,stroke:#333,stroke-width:2px
+
+```
+
+## 2. Estrutura da Solution
+
+A arquitetura foi desenhada seguindo princípios de **Domain-Driven Design (DDD)** e **Clean Architecture**, isolando os efeitos colaterais da lógica de negócio.
+
+* **`ETL` (Library)**: Responsável pela ingestão. Utiliza o módulo `Fetcher` para chamadas assíncronas ao Yahoo Finance (v8 chart API) e o `Parser` para transformar o JSON em tipos nativos, consolidando tudo em uma matriz única no `Transform`.
+* **`PortfolioEngine` (Library - Pura)**:
+* `Domain.fs`: Definições de tipos imutáveis (`Weights`, `CovarianceMatrix`).
+* `MathEngine.fs`: Álgebra linear otimizada para cálculo de $\sigma$ e $\mu$.
+* `Simulator.fs`: Implementação do Monte Carlo com lógica **híbrida (Water-filling)** para garantir pesos $\le 20\%$.
+
+
+* **`Main` (Console App)**: Orquestrador que gerencia o paralelismo de CPU para processar as ~174.000 combinações de ativos possíveis.
+
+## 3. Diferenciais Técnicos
+
+* **Paralelismo Massivo**: Uso de `Array.Parallel.map` para distribuir o processamento por todos os núcleos da CPU, permitindo simular milhões de carteiras em segundos.
+* **Imunidade Cultural**: Parsing numérico via `CultureInfo.InvariantCulture`, garantindo que o sistema funcione perfeitamente em ambientes Linux/WSL independentemente da localização.
+* **Robustez de Dados**: Implementação de *Forward Fill* no carregamento de dados para tratar eventuais lacunas de feriados ou falhas na API.
+* **Estratégia de Pesos Híbrida**: Combinação de sorteio aleatório com algoritmo de redistribuição recursiva para satisfazer a restrição de $w_i \le 0.2$ sem desperdiçar iterações.
+
+## 4. Fundamentação Matemática
+
+A otimização busca a carteira que maximiza:
+
+
+$$SR = \frac{E[R_p] - r_f}{\sigma_p}$$
+
+Onde a volatilidade da carteira ($\sigma_p$) é calculada via forma quadrática:
+
+
+$$\sigma_p = \sqrt{w^T \Sigma w} \times \sqrt{252}$$
+
+## 5. Como Executar
+
+### Pré-requisitos
+
+* .NET 8.0 SDK ou superior.
+* Ambiente Linux/WSL recomendado.
+
+### Rodar o Pipeline Completo
+
+```bash
+# 1. Compilar o projeto
+dotnet build
+
+# 2. Executar o motor (Extração + Simulação)
+dotnet run --project Main
+
+```
+
+Os resultados serão exibidos no console e o arquivo `data/efficient_frontier.csv` será gerado para plotagem.
+
+## 6. Autoria
+
+Projeto desenvolvido por Bruno Drezza como parte da graduação em Economia no Insper.

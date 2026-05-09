@@ -57,3 +57,5 @@ benchmark_results/
 appsettings.Development.json
 appsettings.local.json
 .env
+.fake
+.venv

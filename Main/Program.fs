@@ -54,8 +54,8 @@ let main argv =
     let totalAssets = assetNames.Length
     
     let minAssetsPerPortfolio = 25
-    let simulationsPerCombination = 10_000 // Reduzido levemente para acelerar o Map-Reduce
-    let riskFreeRate = 0.0
+    let simulationsPerCombination = 1_000_000 // Reduzido levemente para acelerar o Map-Reduce
+    let riskFreeRate = 0.03 // 3% de risk free rate
     
     let combinations = generateAllIndicesCombinations totalAssets minAssetsPerPortfolio
     printfn "[1/3] Disparando Paralelismo para %s combinações...\n" (combinations.Length.ToString("N0"))

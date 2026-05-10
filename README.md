@@ -80,13 +80,13 @@ O gráfico gerado (`data/efficient_frontier_dual.png`) ilustra o Teorema da Fron
 
 **A. Comparativo de Máximo Sharpe (Tangência):**
 * **Método Analítico (Otimização Matemática):**
-  * Sharpe Ratio: [Inserir]
-  * Retorno Esperado: [Inserir]%
-  * Risco (Volatilidade): [Inserir]%
+  * Sharpe Ratio: **5.2734**
+  * Retorno Esperado: **46.20**%
+  * Risco (Volatilidade): **8.76**%
 * **Método Heurístico (Monte Carlo - F#):**
-  * Sharpe Ratio: [Inserir]
-  * Retorno Esperado: [Inserir]%
-  * Risco (Volatilidade): [Inserir]%
+  * Sharpe Ratio: **3.4008**
+  * Retorno Esperado: **31.59**%
+  * Risco (Volatilidade): **8.41**%
 
 **B. Conclusão sobre a Divergência:**
 Observa-se que a simulação de Monte Carlo com bilhões de cenários consegue se aproximar em precisão milimétrica da Fronteira Analítica real. A restrição de 20% por ativo provou ser eficaz para evitar a super-alocação (*overfitting*) em ativos específicos que apresentaram retornos atípicos no semestre analisado.

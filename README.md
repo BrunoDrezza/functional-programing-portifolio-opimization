@@ -76,7 +76,7 @@ python3 plot_frontier_dual.py
 
 *(Os dados abaixo são preenchidos após a execução final do pipeline de 1 Milhão de simulações).*
 
-![Fronteira Eficiente]("./data/efficient_frontier_dual.png")
+ ![Fronteira Eficiente]("./data/efficient_frontier_dual.png")
 
 O gráfico gerado (`data/efficient_frontier_dual.png`) ilustra o Teorema da Fronteira Eficiente na prática, onde a nuvem de pontos gerada pelas simulações em F# é perfeitamente envelopada pelo limite teórico matemático traçado pelo SciPy.
 

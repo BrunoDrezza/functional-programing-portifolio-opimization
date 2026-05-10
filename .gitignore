@@ -45,7 +45,7 @@ BenchmarkDotNet.Artifacts/
 # Ignora arquivos CSV de cotações do Dow Jones (ex: dow30_returns.csv)
 *.csv
 *.tsv
-data/
+data/data_raw/
 
 # Logs de execução do Monte Carlo e saídas do script run_benchmark.sh
 *.log

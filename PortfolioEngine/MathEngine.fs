@@ -16,10 +16,8 @@ let TradingDays = 252.0
 /// Calcula o produto escalar (dot product) entre dois vetores.
 /// </summary>
 let private dotProduct (v1: float array) (v2: float array) : float =
-    let mutable sum = 0.0
-    for i in 0 .. v1.Length - 1 do
-        sum <- sum + (v1.[i] * v2.[i])
-    sum
+    // Usamos fold2 (zero-alocação) no lugar do map2 para não sobrecarregar o Garbage Collector
+    Array.fold2 (fun acc a b -> acc + (a * b)) 0.0 v1 v2
 
 // ==========================================
 // Preparação de Matrizes (Rodam 1x por combinação)
@@ -28,33 +26,29 @@ let private dotProduct (v1: float array) (v2: float array) : float =
 /// <summary>
 /// Calcula o retorno médio diário para cada ativo a partir da matriz histórica de retornos.
 /// </summary>
-let calculateMeanReturns (returnsMatrix: float[,]) : ExpectedReturns =
+let calculateMeanReturns (returnsMatrix: float[,]) : float array =
     let numDays = Array2D.length1 returnsMatrix
     let numAssets = Array2D.length2 returnsMatrix
-    
-    // Array.init é uma forma puramente funcional de inicializar um array
     Array.init numAssets (fun j ->
-        let mutable sum = 0.0
-        for i in 0 .. numDays - 1 do
-            sum <- sum + returnsMatrix.[i, j]
-        sum / float numDays
+        Array.init numDays (fun i -> returnsMatrix.[i, j])
+        |> Array.average
     )
 
 /// <summary>
 /// Constrói a Matriz de Covariância a partir da matriz de retornos e das médias.
 /// Usa o denominador amostral (N-1).
 /// </summary>
-let calculateCovarianceMatrix (returnsMatrix: float[,]) (means: ExpectedReturns) : CovarianceMatrix =
+let calculateCovarianceMatrix (returnsMatrix: float[,]) (means: float array) : float[,] =
     let numDays = Array2D.length1 returnsMatrix
     let numAssets = Array2D.length2 returnsMatrix
-    let nFloat = float (numDays - 1) 
+    let nFloat = float (numDays - 1)
     
-    // Array2D.init constrói a matriz imutável no final da execução
     Array2D.init numAssets numAssets (fun i j ->
-        let mutable sum = 0.0
-        for d in 0 .. numDays - 1 do
-            sum <- sum + (returnsMatrix.[d, i] - means.[i]) * (returnsMatrix.[d, j] - means.[j])
-        sum / nFloat
+        Array.init numDays (fun d ->
+            (returnsMatrix.[d, i] - means.[i]) * (returnsMatrix.[d, j] - means.[j])
+        )
+        |> Array.sum
+        |> fun s -> s / nFloat
     )
 
 // ==========================================
@@ -73,17 +67,13 @@ let calculatePortfolioReturn (weights: Weights) (expectedDailyReturns: ExpectedR
 /// Calcula a volatilidade anualizada da carteira (σ).
 /// Fórmula: σ_p = sqrt(w^T * C * w) multiplicada pela raiz de 252.
 /// </summary>
-let calculateVolatility (weights: Weights) (covMatrix: CovarianceMatrix) : float =
+let calculateVolatility (weights: float array) (covMatrix: float[,]) : float =
     let n = weights.Length
-    let mutable variance = 0.0
+    let variance =
+        Seq.allPairs [0 .. n - 1] [0 .. n - 1]
+        |> Seq.sumBy (fun (i, j) -> weights.[i] * weights.[j] * covMatrix.[i, j])
     
-    // Forma quadrática otimizada para evitar alocação de memória no loop
-    for i in 0 .. n - 1 do
-        for j in 0 .. n - 1 do
-            variance <- variance + (weights.[i] * weights.[j] * covMatrix.[i, j])
-            
-    let dailyVol = sqrt variance
-    dailyVol * (sqrt TradingDays)
+    (sqrt variance) * (sqrt TradingDays)
 
 /// <summary>
 /// Calcula o Sharpe Ratio anualizado.

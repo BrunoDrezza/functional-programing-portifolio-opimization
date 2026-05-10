@@ -8,16 +8,20 @@ open PortfolioEngine.Simulator
 open DataLoader
 
 // ==========================================
-// Módulo de Combinatória
+// Módulo de Combinatória (Otimizado com Pruning)
 // ==========================================
-let rec getCombinations k lst =
-    match k, lst with
-    | 0, _ -> [[]]
-    | _, [] -> []
-    | k, x::xs -> 
-        let withX = getCombinations (k - 1) xs |> List.map (fun ys -> x :: ys)
-        let withoutX = getCombinations k xs
-        withX @ withoutX
+let getCombinations k (lst: 'a list) =
+    let rec comb k n l =
+        if k = 0 then [[]]
+        elif k > n then [] // A TRAVA DE OURO: Aborta se faltam elementos!
+        else
+            match l with
+            | [] -> []
+            | x::xs -> 
+                let withX = comb (k - 1) (n - 1) xs |> List.map (fun ys -> x :: ys)
+                let withoutX = comb k (n - 1) xs
+                withX @ withoutX
+    comb k (List.length lst) lst
 
 let generateAllIndicesCombinations (totalAssets: int) (minSize: int) =
     let allIndices = [0 .. totalAssets - 1]
@@ -32,11 +36,9 @@ let createAssetSubset (indices: int array) (allNames: string array) (fullReturns
     let k = indices.Length
     
     let subsetNames = indices |> Array.map (fun i -> allNames.[i])
-    let subsetReturns = Array2D.zeroCreate<float> numDays k
     
-    for d in 0 .. numDays - 1 do
-        for j in 0 .. k - 1 do
-            subsetReturns.[d, j] <- fullReturns.[d, indices.[j]]
+    // Matriz inicializada funcionalmente em uma linha:
+    let subsetReturns = Array2D.init numDays k (fun d j -> fullReturns.[d, indices.[j]])
             
     let means = calculateMeanReturns subsetReturns
     let cov = calculateCovarianceMatrix subsetReturns means
@@ -53,25 +55,28 @@ let main argv =
     let assetNames, returnsMatrix = loadReturnsMatrix dataPath
     let totalAssets = assetNames.Length
     
+    // Configuração de Teste Rápido
     let minAssetsPerPortfolio = 25
-    let simulationsPerCombination = 1_000_000 // Reduzido levemente para acelerar o Map-Reduce
-    let riskFreeRate = 0.03 // 3% de risk free rate
+    let simulationsPerCombination = 10_000
+    let riskFreeRate = 0.03 
     
     let combinations = generateAllIndicesCombinations totalAssets minAssetsPerPortfolio
     printfn "[1/3] Disparando Paralelismo para %s combinações...\n" (combinations.Length.ToString("N0"))
     
     let sw = Stopwatch.StartNew()
 
-    // FASE 1: Map-Reduce Paralelo (Isto garante a nota máxima no edital)
+    // FASE 1: Map-Reduce Paralelo (100% Puro Funcional - Sem side-effects)
     let results =
         combinations
         |> Array.Parallel.map (fun indices ->
             let subset = createAssetSubset indices assetNames returnsMatrix
             let bestPort = simulateMonteCarlo subset simulationsPerCombination riskFreeRate
-            (indices, subset, bestPort) // Passamos o subset adiante para usarmos no plot
+            (indices, subset, bestPort)
         )
 
     sw.Stop()
+    
+    printfn "  -> Map-Reduce concluído! %d combinações processadas com sucesso." results.Length
     
     // Encontrar a Campeã Absoluta
     let bestIndices, championSubset, championPortfolio = 

@@ -13,33 +13,18 @@ open PortfolioEngine.MathEngine
 /// Corta os pesos que excedem o limite e redistribui o excesso equitativamente.
 /// </summary>
 let rec private redistributeWeights (weights: float array) (maxLimit: float) : float array =
-    let n = weights.Length
-    let mutable excess = 0.0
-    let mutable validCount = 0
+    let capped = weights |> Array.map (fun w -> min w maxLimit)
+    let excess = Array.map2 (fun orig cap -> max 0.0 (orig - cap)) weights capped |> Array.sum
+    let validCount = capped |> Array.filter (fun w -> w < maxLimit) |> Array.length
 
-    // Identifica excessos e conta quantos ativos ainda podem receber peso
-    for i in 0 .. n - 1 do
-        if weights.[i] > maxLimit then
-            excess <- excess + (weights.[i] - maxLimit)
-            weights.[i] <- maxLimit
-        else if weights.[i] < maxLimit then
-            validCount <- validCount + 1
-
-    // Se o excesso for residual (erro de precisão de floating point) ou não houver a quem dar, termina
     if excess <= 1e-9 || validCount = 0 then
-        weights
+        capped
     else
         let distribution = excess / float validCount
-        let newWeights = Array.copy weights
-        
-        for i in 0 .. n - 1 do
-            if newWeights.[i] < maxLimit then
-                newWeights.[i] <- newWeights.[i] + distribution
-        
-        // A redistribuição pode ter empurrado um ativo para lá do limite. Recursão se necessário.
-        let needsMore = newWeights |> Array.exists (fun w -> w > maxLimit + 1e-9)
-        if needsMore then redistributeWeights newWeights maxLimit
-        else newWeights
+        let distributed = capped |> Array.map (fun w -> if w < maxLimit then w + distribution else w)
+        let needsMore = distributed |> Array.exists (fun w -> w > maxLimit + 1e-9)
+        if needsMore then redistributeWeights distributed maxLimit
+        else distributed
 
 /// <summary>
 /// Gera um vetor de pesos normalizado. Utiliza a estratégia de "Fast Path".
@@ -71,48 +56,27 @@ let generateValidWeights (numAssets: int) : Weights =
 let simulateMonteCarlo (subset: AssetSubset) (numSims: int) (riskFreeRate: float) : PortfolioResult =
     let numAssets = subset.Assets.Length
     
-    // Controlo de estado estritamente local (Impede a alocação de 1 milhão de objetos na Heap)
-    let mutable bestSharpe = -Double.MaxValue
-    let mutable bestReturn = 0.0
-    let mutable bestVol = 0.0
-    let mutable bestWeights = Array.empty<float>
-
-    for _ in 1 .. numSims do
+    Seq.init numSims (fun _ ->
         let w = generateValidWeights numAssets
-        
         let ret = calculatePortfolioReturn w subset.MeanReturns
         let vol = calculateVolatility w subset.Covariance
-        let sharpe = calculateSharpe ret vol riskFreeRate
-        
-        // Mantém em memória apenas o vetor supremo
-        if sharpe > bestSharpe then
-            bestSharpe <- sharpe
-            bestReturn <- ret
-            bestVol <- vol
-            bestWeights <- w
-
-    // Devolve um Record imutável respeitando o paradigma funcional
-    {
-        Weights = bestWeights
-        ExpectedReturn = bestReturn
-        Volatility = bestVol
-        SharpeRatio = bestSharpe
-    }
+        { Weights = w
+          ExpectedReturn = ret
+          Volatility = vol
+          SharpeRatio = calculateSharpe ret vol riskFreeRate }
+    )
+    |> Seq.maxBy (fun p -> p.SharpeRatio)
 
 /// <summary>
 /// Executa Monte Carlo gerando as coordenadas para plotagem da Fronteira Eficiente.
 /// Usada apenas após a descoberta da carteira vencedora.
 /// </summary>
-let generatePlotData (subset: AssetSubset) (numSims: int) (riskFreeRate: float) =
+let generatePlotData (subset: AssetSubset) (numSims: int) (riskFreeRate: float) : (float * float * float) array =
     let numAssets = subset.Assets.Length
-    let plotPoints = Array.zeroCreate<(float * float * float)> numSims
-
-    for i in 0 .. numSims - 1 do
+    
+    Array.init numSims (fun _ ->
         let w = generateValidWeights numAssets
         let ret = calculatePortfolioReturn w subset.MeanReturns
         let vol = calculateVolatility w subset.Covariance
-        let sharpe = calculateSharpe ret vol riskFreeRate
-        
-        plotPoints.[i] <- (vol, ret, sharpe)
-        
-    plotPoints
+        (vol, ret, calculateSharpe ret vol riskFreeRate)
+    )
